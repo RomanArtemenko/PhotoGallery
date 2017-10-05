@@ -27,7 +27,7 @@ import java.util.List;
 public class FlickrFetch {
     private static final String TAG = "FlickrFetch";
 
-    public static final String API_KEY = Flickr.apiKey;
+    public static final String API_KEY = FlickrApi.apiKey;
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
 
@@ -61,7 +61,7 @@ public class FlickrFetch {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(int page) {
 
         List<GalleryItem> items = new ArrayList<>();
 
@@ -75,6 +75,7 @@ public class FlickrFetch {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page", String.valueOf(page))
                     .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);

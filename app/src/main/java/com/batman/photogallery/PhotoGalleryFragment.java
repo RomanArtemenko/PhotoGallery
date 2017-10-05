@@ -25,6 +25,9 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private boolean loadingData = false;
+    private int curPage = 1;
+    private int curPosition;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -34,7 +37,7 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute();
+        new FetchItemsTask().execute(curPage);
     }
 
     @Override
@@ -43,6 +46,17 @@ public class PhotoGalleryFragment extends Fragment {
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                Log.i(TAG,"Current position : " + String.valueOf(curPosition));
+                if (mItems.size() - 1 == curPosition && !loadingData) {
+                    Toast.makeText(getContext(), "Need load next page : " + curPage, Toast.LENGTH_SHORT).show();
+                    new FetchItemsTask().execute(curPage);
+                }
+            }
+        });
 
         setupAdapter();
 
@@ -51,7 +65,12 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter() {
         if (isAdded()) {
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            if (curPage == 1 || mPhotoRecyclerView.getAdapter() == null) {
+                mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            } else {
+                mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
+            }
+
         }
     }
 
@@ -83,6 +102,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
+            curPosition = position;
             GalleryItem galleryItem = mGalleryItems.get(position);
             holder.bingGalleryItem(galleryItem);
         }
@@ -93,17 +113,24 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
         @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetch().fetchItems();
+        protected List<GalleryItem> doInBackground(Integer... params) {
+            loadingData = true;
+            return new FlickrFetch().fetchItems(params[0]);
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            mItems = items;
+            mItems.addAll(items);
 
+            Log.i(TAG, "Count of items : " + mItems.size());
             setupAdapter();
+
+            curPage++;
+            Toast.makeText(getActivity(),"Next page : " + curPage, Toast.LENGTH_LONG).show();
+            loadingData = false;
+
         }
     }
 }
