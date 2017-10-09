@@ -27,7 +27,7 @@ import java.util.List;
 public class FlickrFetch {
     private static final String TAG = "FlickrFetch";
 
-    public static final String API_KEY = Flickr.apiKey;
+    public static final String API_KEY = FlickrApi.apiKey;
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
 
