@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,7 +69,23 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
+    private class ProgreeBarHolder extends RecyclerView.ViewHolder {
+        private ProgressBar mProgressBarView;
+
+        public ProgreeBarHolder(View itemView) {
+            super(itemView);
+            mProgressBarView = (ProgressBar) itemView;
+        }
+
+        public void  bing() {
+            mProgressBarView.setIndeterminate(true);
+        }
+    }
+
+    private class PhotoAdapter extends RecyclerView.Adapter {
+        private final int VIEW_ITEM = 1;
+        private final int VIEW_PROG = 0;
+
         private List<GalleryItem> mGalleryItems;
 
         public PhotoAdapter(List<GalleryItem> galleryItems) {
@@ -76,20 +93,40 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         @Override
-        public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            TextView textView = new TextView(getActivity());
-            return new PhotoHolder(textView);
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            RecyclerView.ViewHolder vh;
+            if (viewType == VIEW_ITEM) {
+                TextView textView = new TextView(getActivity());
+                vh = new PhotoHolder(textView);
+            } else {
+                ProgressBar progressBar = (ProgressBar) new ProgressBar(getActivity());
+                vh = new ProgreeBarHolder(progressBar) ;
+            }
+            return vh;
         }
 
         @Override
-        public void onBindViewHolder(PhotoHolder holder, int position) {
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
-            holder.bingGalleryItem(galleryItem);
+
+            if (holder instanceof PhotoHolder) {
+                ((PhotoHolder) holder).bingGalleryItem(galleryItem);
+            } else {
+                Log.i(TAG, "Trying bind progressBar");
+                ((ProgreeBarHolder) holder).bing();
+                Log.i(TAG, "END Trying bind progressBar");
+            }
+
         }
 
         @Override
         public int getItemCount() {
             return mGalleryItems.size();
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return mGalleryItems.get(position) != null ? VIEW_ITEM : VIEW_PROG;
         }
     }
 
@@ -102,7 +139,7 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
             mItems = items;
-
+            mItems.add(null);
             setupAdapter();
         }
     }
