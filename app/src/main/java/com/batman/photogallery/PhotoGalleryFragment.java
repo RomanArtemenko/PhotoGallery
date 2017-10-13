@@ -74,7 +74,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         public ProgreeBarHolder(View itemView) {
             super(itemView);
-            mProgressBarView = (ProgressBar) itemView;
+            mProgressBarView = (ProgressBar) itemView.findViewById(R.id.progressBar);
         }
 
         public void  bing() {
@@ -95,12 +95,13 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             RecyclerView.ViewHolder vh;
+            View v;
             if (viewType == VIEW_ITEM) {
-                TextView textView = new TextView(getActivity());
-                vh = new PhotoHolder(textView);
+                v = new TextView(getActivity());
+                vh = new PhotoHolder(v);
             } else {
-                ProgressBar progressBar = (ProgressBar) new ProgressBar(getActivity());
-                vh = new ProgreeBarHolder(progressBar) ;
+                v =  LayoutInflater.from(parent.getContext()).inflate(R.layout.progress_item, parent, false);
+                vh = new ProgreeBarHolder(v) ;
             }
             return vh;
         }
