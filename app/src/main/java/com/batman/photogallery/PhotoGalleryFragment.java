@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -82,12 +84,29 @@ public class PhotoGalleryFragment extends Fragment {
             mTitleTextView = (TextView) itemView;
         }
 
-        public void bingGalleryItem(GalleryItem item) {
+        public void bindGalleryItem(GalleryItem item) {
             mTitleTextView.setText(item.toString());
         }
     }
 
-    private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
+    private class SpinnerHolder extends RecyclerView.ViewHolder {
+        private ProgressBar mProgressBar;
+
+
+        public SpinnerHolder(View itemView) {
+            super(itemView);
+            mProgressBar = (ProgressBar) itemView.findViewById(R.id.spinner);
+        }
+
+        public void bind() {
+            mProgressBar.setIndeterminate(true);
+        }
+    }
+
+    private class PhotoAdapter extends RecyclerView.Adapter {
+        private final int VIEW_ITEM = 1;
+        private final int VIEW_PROG = 0;
+
         private List<GalleryItem> mGalleryItems;
 
         public PhotoAdapter(List<GalleryItem> galleryItems) {
@@ -95,21 +114,39 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         @Override
-        public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            TextView textView = new TextView(getActivity());
-            return new PhotoHolder(textView);
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            RecyclerView.ViewHolder vh;
+
+            if (viewType == VIEW_ITEM) {
+                TextView textView = new TextView(getActivity());
+                vh = new PhotoHolder(textView);
+            } else {
+                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.progress_item, parent, false);
+                vh = new SpinnerHolder(v);
+            }
+
+            return vh;
         }
 
         @Override
-        public void onBindViewHolder(PhotoHolder holder, int position) {
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             curPosition = position;
-            GalleryItem galleryItem = mGalleryItems.get(position);
-            holder.bingGalleryItem(galleryItem);
+            if (holder instanceof PhotoHolder) {
+                GalleryItem galleryItem = mGalleryItems.get(position);
+                ((PhotoHolder) holder).bindGalleryItem(galleryItem);
+            } else {
+                ((SpinnerHolder) holder).bind();
+            }
         }
 
         @Override
         public int getItemCount() {
             return mGalleryItems.size();
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return mGalleryItems.get(position) != null ? VIEW_ITEM : VIEW_PROG;
         }
     }
 
@@ -122,7 +159,13 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
+            if (!mItems.isEmpty()) {
+                mItems.remove(mItems.size() - 1);
+            }
             mItems.addAll(items);
+
+            mItems.add(null);
+
 
             Log.i(TAG, "Count of items : " + mItems.size());
             setupAdapter();
