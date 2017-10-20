@@ -1,5 +1,6 @@
 package com.batman.photogallery;
 
+import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,10 +41,25 @@ public class PhotoGalleryFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final int defColCount = 3;
+        final int defColWidth = 360;
+
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        mPhotoRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mPhotoRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                int newColCount = (int) Math.floor(mPhotoRecyclerView.getWidth()/defColWidth);
+
+                if (newColCount != defColCount) {
+                    ((GridLayoutManager) mPhotoRecyclerView.getLayoutManager()).setSpanCount(newColCount);
+                }
+            }
+        });
 
         setupAdapter();
 
